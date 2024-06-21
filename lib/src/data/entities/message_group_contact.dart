@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 class MessageGroupContact {
   String groupName;
   final String groupId;
