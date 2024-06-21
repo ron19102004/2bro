@@ -1,33 +1,30 @@
 import 'package:app_chat/src/data/entities/message_entity.dart';
-import 'package:app_chat/src/data/services/message_service.dart';
+import 'package:app_chat/src/data/entities/message_group_contact.dart';
+import 'package:app_chat/src/data/services/message_group_service.dart';
+import 'package:app_chat/src/presentation/screens/message/message_group_setting_screen.dart';
 import 'package:app_chat/src/presentation/widgets/alert_form_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:toastification/toastification.dart';
 
 import '../../../../core/configs/dependencies_injection.dart';
 
-class MessageScreen extends StatefulWidget {
-  final String receiverId;
-  final String photoURL;
-  final String name;
+class MessageGroupScreen extends StatefulWidget {
+  final MessageGroupContact messageGroupContact;
 
-  const MessageScreen(
-      {super.key,
-      required this.receiverId,
-      required this.name,
-      required this.photoURL});
+  const MessageGroupScreen({super.key, required this.messageGroupContact});
 
   @override
-  State<MessageScreen> createState() => _MessageScreenState();
+  State<MessageGroupScreen> createState() => _MessageGroupScreenState();
 }
 
-class _MessageScreenState extends State<MessageScreen> {
+class _MessageGroupScreenState extends State<MessageGroupScreen> {
   final userCurrent = FirebaseAuth.instance.currentUser!;
   final messageController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  final emailController = TextEditingController();
 
   @override
   void initState() {
@@ -38,6 +35,67 @@ class _MessageScreenState extends State<MessageScreen> {
   void dispose() {
     super.dispose();
     scrollController.dispose();
+    messageController.dispose();
+    emailController.dispose();
+  }
+
+  String getNameGroup() {
+    String name = widget.messageGroupContact.groupName;
+    if (name.length > 10) {
+      return "${name.substring(0, 10)}...";
+    }
+    return name;
+  }
+
+  void showAddNew(
+      {required BuildContext context,
+      required Function()? onPressed,
+      required String title,
+      required String hint,
+      required String textButton,
+      required TextEditingController controller}) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertFormWidget(body: [
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+          TextField(
+            controller: controller,
+            style: const TextStyle(color: CupertinoColors.black),
+            cursorColor: CupertinoColors.inactiveGray,
+            decoration: InputDecoration(
+              fillColor: CupertinoColors.inactiveGray,
+              hintStyle: const TextStyle(color: CupertinoColors.inactiveGray),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide:
+                      const BorderSide(color: CupertinoColors.secondaryLabel)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: const BorderSide(
+                      color: CupertinoColors.secondarySystemFill)),
+              hintText: hint,
+            ),
+          ),
+          TextButton(
+              onPressed: onPressed,
+              child: const Text(
+                "Chat",
+                style: TextStyle(
+                    color: CupertinoColors.systemGreen,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500),
+              ))
+        ]);
+      },
+    );
   }
 
   @override
@@ -46,22 +104,93 @@ class _MessageScreenState extends State<MessageScreen> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
+          actions: [
+            IconButton(
+                onPressed: () {
+                  showAddNew(
+                      context: context,
+                      onPressed: () {
+                        if (emailController.text.isNotEmpty) {
+                          di<MessageGroupService>()
+                              .addMember(widget.messageGroupContact.groupId,
+                                  emailController.text)
+                              .then(
+                            (value) {
+                              if (value) {
+                                toastification.show(
+                                    closeButtonShowType:
+                                        CloseButtonShowType.none,
+                                    type: ToastificationType.success,
+                                    style: ToastificationStyle.flat,
+                                    autoCloseDuration:
+                                        const Duration(seconds: 3),
+                                    title: Text(
+                                        "Add ${emailController.text} successfully!"));
+                              } else {
+                                toastification.show(
+                                    closeButtonShowType:
+                                        CloseButtonShowType.none,
+                                    type: ToastificationType.error,
+                                    style: ToastificationStyle.flat,
+                                    autoCloseDuration:
+                                        const Duration(seconds: 3),
+                                    title: const Text("Add a member failed!"));
+                              }
+                            },
+                          );
+                        }
+                      },
+                      title: "Add a member",
+                      hint: "Enter email",
+                      textButton: "Add",
+                      controller: emailController);
+                },
+                icon: const Icon(
+                  CupertinoIcons.person_add,
+                  color: CupertinoColors.inactiveGray,
+                )),
+            IconButton(
+                onPressed: () {
+                  Navigator.push(context, CupertinoPageRoute(
+                    builder: (context) {
+                      return MessageGroupSettingScreen(
+                          messageGroupContact: widget.messageGroupContact);
+                    },
+                  ));
+                },
+                icon: const Icon(
+                  CupertinoIcons.arrow_right_circle,
+                  color: CupertinoColors.inactiveGray,
+                ))
+          ],
           title: Row(
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(50),
                 child: Image.network(
-                  widget.photoURL,
-                  width: 40,
-                  height: 40,
-                  fit: BoxFit.cover,
+                  widget.messageGroupContact.groupPhotoURL,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: CupertinoColors.secondaryLabel,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: const Icon(
+                        CupertinoIcons.person_3_fill,
+                        color: CupertinoColors.white,
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(
                 width: 5,
               ),
               Text(
-                widget.name,
+                getNameGroup(),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
                 style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -83,8 +212,8 @@ class _MessageScreenState extends State<MessageScreen> {
           children: [
             Expanded(
               child: StreamBuilder<List<MessageEntity>>(
-                  stream:
-                      di<MessageService>().getMessagesStream(widget.receiverId),
+                  stream: di<MessageGroupService>().getMessageStreamByGroupId(
+                      widget.messageGroupContact.groupId),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Align(
@@ -190,8 +319,9 @@ class _MessageScreenState extends State<MessageScreen> {
             suffixIcon: IconButton(
               onPressed: () {
                 if (messageController.text.isNotEmpty) {
-                  di<MessageService>().sendMessage(
-                      widget.receiverId, messageController.text, context);
+                  di<MessageGroupService>().sendMessage(
+                      widget.messageGroupContact.groupId,
+                      messageController.text);
                   messageController.clear();
                 }
               },

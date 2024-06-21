@@ -1,12 +1,15 @@
 import 'package:app_chat/src/data/repositories/user_repo.dart';
+import 'package:app_chat/src/data/services/message_group_service.dart';
 import 'package:app_chat/src/presentation/screens/auth/sign_in_screen.dart';
 import 'package:app_chat/src/presentation/screens/home/home_screen.dart';
 import 'package:app_chat/src/presentation/screens/home/search_user_screen.dart';
 import 'package:app_chat/src/presentation/screens/message/message_screen.dart';
 import 'package:app_chat/src/presentation/screens/setting/setting_screen.dart';
+import 'package:app_chat/src/presentation/widgets/alert_form_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:sliding_clipped_nav_bar/sliding_clipped_nav_bar.dart';
 import 'package:toastification/toastification.dart';
 
@@ -23,6 +26,7 @@ class _StartPointAppScreenState extends State<StartPointAppScreen> {
   int selectedIndex = 0;
   late List<Map<dynamic, dynamic>> screens;
   final emailValueAddChatController = TextEditingController();
+  final groupNameController = TextEditingController();
 
   @override
   void initState() {
@@ -37,93 +41,56 @@ class _StartPointAppScreenState extends State<StartPointAppScreen> {
   void dispose() {
     super.dispose();
     emailValueAddChatController.dispose();
+    groupNameController.dispose();
   }
 
-  void showAddNewChat(BuildContext context) {
+  void showAddNew(
+      {required BuildContext context,
+      required Function()? onPressed,
+      required String title,
+      required String hint,
+      required String textButton,
+      required TextEditingController controller}) {
     showDialog(
       context: context,
       builder: (_) {
-        return AlertDialog(
-          backgroundColor: CupertinoColors.extraLightBackgroundGray,
-          content: Container(
-            decoration: BoxDecoration(
-                color: CupertinoColors.extraLightBackgroundGray,
-                borderRadius: BorderRadius.circular(10)),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const Text(
-                    "Add new chat",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  TextField(
-                    controller: emailValueAddChatController,
-                    style: const TextStyle(color: CupertinoColors.black),
-                    cursorColor: CupertinoColors.inactiveGray,
-                    decoration: InputDecoration(
-                      fillColor: CupertinoColors.inactiveGray,
-                      hintStyle:
-                          const TextStyle(color: CupertinoColors.inactiveGray),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                              color: CupertinoColors.secondaryLabel)),
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                              color: CupertinoColors.secondarySystemFill)),
-                      hintText: "Enter email",
-                    ),
-                  ),
-                  TextButton(
-                      child: const Text(
-                        "Chat",
-                        style: TextStyle(
-                            color: CupertinoColors.systemGreen,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500),
-                      ),
-                      onPressed: () {
-                        if (emailValueAddChatController.text.isNotEmpty) {
-                          di<UserRepository>()
-                              .findByEmail(
-                                  emailValueAddChatController.text.trim())
-                              .then(
-                            (value) {
-                              if (value != null) {
-                                emailValueAddChatController.clear();
-                                Navigator.push(context, CupertinoPageRoute(
-                                  builder: (context) {
-                                    return MessageScreen(
-                                        receiverId: value.uid,
-                                        name: value.fullName ?? "Unknown",
-                                        photoURL: value.photoURL ?? "");
-                                  },
-                                ));
-                              } else {
-                                emailValueAddChatController.clear();
-                                toastification.show(
-                                    closeButtonShowType:
-                                        CloseButtonShowType.none,
-                                    type: ToastificationType.error,
-                                    style: ToastificationStyle.flat,
-                                    autoCloseDuration:
-                                        const Duration(seconds: 3),
-                                    title: const Text("Email not exist!"));
-                              }
-                            },
-                          );
-                        }
-                      })
-                ],
-              ),
+        return AlertFormWidget(body: [
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(
+            height: 5,
+          ),
+          TextField(
+            controller: controller,
+            style: const TextStyle(color: CupertinoColors.black),
+            cursorColor: CupertinoColors.inactiveGray,
+            decoration: InputDecoration(
+              fillColor: CupertinoColors.inactiveGray,
+              hintStyle: const TextStyle(color: CupertinoColors.inactiveGray),
+              focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide:
+                      const BorderSide(color: CupertinoColors.secondaryLabel)),
+              enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: const BorderSide(
+                      color: CupertinoColors.secondarySystemFill)),
+              hintText: hint,
             ),
           ),
-        );
+          TextButton(
+              onPressed: onPressed,
+              child: const Text(
+                "Chat",
+                style: TextStyle(
+                    color: CupertinoColors.systemGreen,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500),
+              ))
+        ]);
       },
     );
   }
@@ -146,40 +113,106 @@ class _StartPointAppScreenState extends State<StartPointAppScreen> {
                             color: CupertinoColors.quaternaryLabel),
                         child: IconButton(
                             onPressed: () {
-                              showAddNewChat(context);
+                              showAddNew(
+                                  controller: emailValueAddChatController,
+                                  context: context,
+                                  onPressed: () {
+                                    if (emailValueAddChatController
+                                        .text.isNotEmpty) {
+                                      di<UserRepository>()
+                                          .findByEmail(
+                                              emailValueAddChatController.text
+                                                  .trim())
+                                          .then(
+                                        (value) {
+                                          if (value != null) {
+                                            emailValueAddChatController.clear();
+                                            Navigator.push(context,
+                                                CupertinoPageRoute(
+                                              builder: (context) {
+                                                return MessageScreen(
+                                                    receiverId: value.uid,
+                                                    name: value.fullName ??
+                                                        "Unknown",
+                                                    photoURL:
+                                                        value.photoURL ?? "");
+                                              },
+                                            ));
+                                          } else {
+                                            emailValueAddChatController.clear();
+                                            toastification.show(
+                                                closeButtonShowType:
+                                                    CloseButtonShowType.none,
+                                                type: ToastificationType.error,
+                                                style: ToastificationStyle.flat,
+                                                autoCloseDuration:
+                                                    const Duration(seconds: 3),
+                                                title: const Text(
+                                                    "Email not exist!"));
+                                          }
+                                        },
+                                      );
+                                    }
+                                  },
+                                  title: "Add new chat",
+                                  hint: "Enter email",
+                                  textButton: "Chat");
                             },
                             icon: const Icon(
-                              CupertinoIcons.add_circled,
-                              color: CupertinoColors.inactiveGray,
+                              CupertinoIcons.person_add,
+                              color: CupertinoColors.activeGreen,
                             )),
                       )
                     : const SizedBox(),
                 appBar: AppBar(
                   actions: [
                     selectedIndex == 0
-                        ? Container(
-                            margin: const EdgeInsets.only(right: 10),
-                            width: 40,
-                            height: 40,
-                            decoration: const BoxDecoration(
-                              color: CupertinoColors.placeholderText,
-                              shape: BoxShape.circle,
-                            ),
-                            child: IconButton(
-                                onPressed: () {
-                                  Navigator.push(context, CupertinoPageRoute(
-                                    builder: (context) {
-                                      return const SearchUserScreen();
-                                    },
-                                  ));
-                                },
-                                icon: const Icon(
-                                  CupertinoIcons.search,
-                                  color:
-                                      CupertinoColors.extraLightBackgroundGray,
-                                )),
-                          )
+                        ? IconButton(
+                            onPressed: () {
+                              showAddNew(
+                                  context: context,
+                                  onPressed: () {
+                                    if (groupNameController.text.isNotEmpty) {
+                                      di<MessageGroupService>().createGroup(
+                                          groupNameController.text);
+                                      groupNameController.clear();
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                                  title: "Add new group",
+                                  hint: "Enter name group",
+                                  textButton: "Create",
+                                  controller: groupNameController);
+                            },
+                            icon: const Icon(
+                              CupertinoIcons.group_solid,
+                              color: CupertinoColors.extraLightBackgroundGray,
+                            ))
                         : const SizedBox(),
+                    // selectedIndex == 0
+                    //     ? Container(
+                    //         margin: const EdgeInsets.only(right: 10),
+                    //         width: 40,
+                    //         height: 40,
+                    //         decoration: const BoxDecoration(
+                    //           color: CupertinoColors.placeholderText,
+                    //           shape: BoxShape.circle,
+                    //         ),
+                    //         child: IconButton(
+                    //             onPressed: () {
+                    //               Navigator.push(context, CupertinoPageRoute(
+                    //                 builder: (context) {
+                    //                   return const SearchUserScreen();
+                    //                 },
+                    //               ));
+                    //             },
+                    //             icon: const Icon(
+                    //               CupertinoIcons.search,
+                    //               color:
+                    //                   CupertinoColors.extraLightBackgroundGray,
+                    //             )),
+                    //       )
+                    //     : const SizedBox(),
                   ],
                   backgroundColor: CupertinoColors.darkBackgroundGray,
                   title: Text(

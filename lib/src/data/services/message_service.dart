@@ -14,6 +14,7 @@ abstract class MessageService {
   Stream<List<MessageEntity>> getMessagesStream(String receiverId);
 
   void deleteContact(String receiverId);
+
 }
 
 class MessageServiceImpl implements MessageService {

@@ -1,7 +1,9 @@
 import 'package:app_chat/src/data/repositories/auth_repo.dart';
+import 'package:app_chat/src/data/repositories/message_group_repo.dart';
 import 'package:app_chat/src/data/repositories/message_repo.dart';
 import 'package:app_chat/src/data/repositories/user_repo.dart';
 import 'package:app_chat/src/data/services/auth_service.dart';
+import 'package:app_chat/src/data/services/message_group_service.dart';
 import 'package:app_chat/src/data/services/message_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -12,9 +14,12 @@ Future<void> initializeDependencies() async {
   di.registerSingleton<AuthRepository>(AuthRepositoryImpl());
   di.registerSingleton<UserRepository>(UserRepositoryImpl());
   di.registerSingleton<MessageRepository>(MessageRepositoryImpl());
+  di.registerSingleton<MessageGroupRepository>(MessageGroupRepositoryImpl());
   //services
   di.registerSingleton<AuthService>(
       AuthServiceImpl(authRepository: di(), userRepository: di()));
   di.registerSingleton<MessageService>(
       MessageServiceImpl(messageRepository: di(), userRepository: di()));
+  di.registerSingleton<MessageGroupService>(
+      MessageGroupServiceImpl(messageGroupRepository: di()));
 }

@@ -1,8 +1,12 @@
 import 'package:app_chat/src/data/entities/chat_contact.dart';
+import 'package:app_chat/src/data/entities/message_group_contact.dart';
+import 'package:app_chat/src/data/services/message_group_service.dart';
 import 'package:app_chat/src/data/services/message_service.dart';
+import 'package:app_chat/src/presentation/screens/message/message_group_screen.dart';
 import 'package:app_chat/src/presentation/screens/message/message_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/configs/dependencies_injection.dart';
@@ -25,6 +29,108 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: CupertinoColors.darkBackgroundGray,
+        appBar: AppBar(
+          backgroundColor: CupertinoColors.darkBackgroundGray,
+          title: const TabBar(
+              indicatorColor: CupertinoColors.activeGreen,
+              dividerColor: CupertinoColors.quaternaryLabel,
+              labelColor: CupertinoColors.activeGreen,
+              tabs: [
+                Tab(
+                  child: Text(
+                    "Contacts",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    "Groups",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                )
+              ]),
+        ),
+        body: TabBarView(children: [contactsWidget(), groupsWidget()]),
+      ),
+    );
+  }
+
+  Widget groupsWidget() {
+    return SafeArea(
+      child: StreamBuilder<List<MessageGroupContact>>(
+          stream: di<MessageGroupService>().getMessageGroupsContactStream(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final groups = snapshot.data!;
+              return ListView.builder(
+                controller: scrollController,
+                itemCount: groups.length,
+                itemBuilder: (context, index) {
+                  final group = groups[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: ListTile(
+                      onTap: () {
+                        Navigator.push(context, CupertinoPageRoute(
+                          builder: (context) {
+                            return MessageGroupScreen(messageGroupContact: group);
+                          },
+                        ));
+                      },
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(50),
+                        child: Image.network(
+                          group.groupPhotoURL,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: CupertinoColors.secondaryLabel,
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: const Icon(
+                                CupertinoIcons.person_3_fill,
+                                color: CupertinoColors.white,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      title: Text(
+                        group.groupName,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                            color: CupertinoColors.extraLightBackgroundGray),
+                      ),
+                      trailing: Text(
+                        "${group.quantityMember} members",
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: const TextStyle(
+                            fontSize: 13, color: CupertinoColors.inactiveGray),
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+            return const Align(
+              child: CircularProgressIndicator(
+                color: CupertinoColors.inactiveGray,
+              ),
+            );
+          }),
+    );
+  }
+
+  Widget contactsWidget() {
     return SafeArea(
       child: StreamBuilder<List<ChatContact>>(
           stream: di<MessageService>().getChatContactsStream(),
@@ -81,7 +187,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               );
             }
-            return Text("hi");
+            return const Align(
+              child: CircularProgressIndicator(
+                color: CupertinoColors.inactiveGray,
+              ),
+            );
           }),
     );
   }
