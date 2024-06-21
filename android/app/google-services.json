@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "457414534507",
+    "project_id": "bro-46353",
+    "storage_bucket": "bro-46353.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:457414534507:android:38895ac54e5e151a95582e",
+        "android_client_info": {
+          "package_name": "com.example.app_chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "457414534507-ttht1jthm3cggtnlehaocho53irru14k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEvmUU1T2f14CGY4OKW2DqKS3E0yDVf94"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "457414534507-ttht1jthm3cggtnlehaocho53irru14k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "457414534507-pe17skn5fqj56a7mrfnii86arrafj2fv.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.appChat"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
