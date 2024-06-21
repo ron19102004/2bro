@@ -46,7 +46,7 @@ class MessageGroupRepositoryImpl implements MessageGroupRepository {
         .doc(user.uid)
         .set({"memberId": user.uid});
     await userCollection
-        .doc(user.email!)
+        .doc(user.uid)
         .collection("chat_groups")
         .doc(groupId)
         .set({"groupId": groupId});
@@ -56,7 +56,7 @@ class MessageGroupRepositoryImpl implements MessageGroupRepository {
   Stream<List<MessageGroupContact>> getMessageGroupsContactStream() {
     final user = FirebaseAuth.instance.currentUser!;
     return userCollection
-        .doc(user.email!)
+        .doc(user.uid)
         .collection("chat_groups")
         .snapshots()
         .asyncMap(
