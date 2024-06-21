@@ -20,6 +20,8 @@ abstract class MessageGroupRepository {
   void removeMember(String groupId, String memberId);
 
   void changeNameGroup(String groupId, String newName);
+
+  Stream<List<UserEntity>> getUserGroupStream(String groupId);
 }
 
 class MessageGroupRepositoryImpl implements MessageGroupRepository {
@@ -34,9 +36,15 @@ class MessageGroupRepositoryImpl implements MessageGroupRepository {
     MessageGroupContact messageGroupContact = MessageGroupContact(
         groupName: nameGroup,
         groupId: groupId,
-        groupPhotoURL: "",
+        groupPhotoURL:
+            "https://static.vecteezy.com/system/resources/thumbnails/004/320/558/small_2x/group-icon-isolated-sign-symbol-illustration-five-people-gathered-icons-black-and-white-design-free-vector.jpg",
         quantityMember: 1);
     await chatGroupCollection.doc(groupId).set(messageGroupContact.toMap());
+    await chatGroupCollection
+        .doc(groupId)
+        .collection("members")
+        .doc(user.uid)
+        .set({"memberId": user.uid});
     await userCollection
         .doc(user.email!)
         .collection("chat_groups")
@@ -105,7 +113,8 @@ class MessageGroupRepositoryImpl implements MessageGroupRepository {
             senderId: user.uid,
             receiveId: "",
             timeSent: timeSent,
-            messageId: idMessage)
+            messageId: idMessage,
+            senderName: user.displayName!)
         .toMap());
   }
 
@@ -127,6 +136,11 @@ class MessageGroupRepositoryImpl implements MessageGroupRepository {
         .collection("chat_groups")
         .doc(groupId)
         .set({"groupId": groupId});
+    await chatGroupCollection
+        .doc(groupId)
+        .collection("members")
+        .doc(user.uid)
+        .set({"memberId": user.uid});
     return true;
   }
 
@@ -140,6 +154,7 @@ class MessageGroupRepositoryImpl implements MessageGroupRepository {
         MessageGroupContact.fromJson(group.data()!);
     messageGroupContact.decrementMember();
     await chatGroupCollection.doc(groupId).set(messageGroupContact.toMap());
+    await chatGroupCollection.doc(groupId).collection("members").doc(memberId).delete();
     await userCollection
         .doc(memberId)
         .collection("chat_groups")
@@ -157,5 +172,26 @@ class MessageGroupRepositoryImpl implements MessageGroupRepository {
         MessageGroupContact.fromJson(group.data()!);
     messageGroupContact.setName(newName);
     await chatGroupCollection.doc(groupId).set(messageGroupContact.toMap());
+  }
+
+  @override
+  Stream<List<UserEntity>> getUserGroupStream(String groupId) {
+    return chatGroupCollection
+        .doc(groupId)
+        .collection("members")
+        .snapshots()
+        .asyncMap(
+      (event) async {
+        List<UserEntity> users = [];
+        for (var doc in event.docs) {
+          var userId = doc.data()["memberId"];
+          final userMap = await userCollection.doc(userId).get();
+          if (userMap.exists) {
+            users.add(UserEntity.fromJson(userMap.data()!));
+          }
+        }
+        return users;
+      },
+    );
   }
 }

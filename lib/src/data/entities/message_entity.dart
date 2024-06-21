@@ -4,13 +4,15 @@ class MessageEntity {
   final String receiveId;
   final DateTime timeSent;
   final String messageId;
+  final String senderName;
 
   MessageEntity(
       {required this.content,
       required this.senderId,
       required this.receiveId,
       required this.timeSent,
-      required this.messageId});
+      required this.messageId,
+      required this.senderName});
 
   Map<String, dynamic> toMap() {
     return {
@@ -18,7 +20,8 @@ class MessageEntity {
       "senderId": senderId,
       "receiveId": receiveId,
       "messageId": messageId,
-      "timeSent": timeSent.microsecondsSinceEpoch
+      "timeSent": timeSent.microsecondsSinceEpoch,
+      "senderName": senderName
     };
   }
 
@@ -28,6 +31,7 @@ class MessageEntity {
         senderId: data["senderId"] ?? "",
         receiveId: data["receiveId"] ?? "",
         messageId: data["messageId"] ?? "",
+        senderName: data["senderName"] ?? "",
         timeSent: DateTime.fromMicrosecondsSinceEpoch(data["timeSent"]));
   }
 }

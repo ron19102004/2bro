@@ -168,6 +168,8 @@ class _MessageGroupScreenState extends State<MessageGroupScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(50),
                 child: Image.network(
+                  width: 40,
+                  height: 40,
                   widget.messageGroupContact.groupPhotoURL,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
@@ -242,6 +244,17 @@ class _MessageGroupScreenState extends State<MessageGroupScreen> {
                               : const EdgeInsets.only(left: 10, right: 60),
                           child: Column(
                             children: [
+                              message.senderId != userCurrent.uid
+                                  ? Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        message.senderName,
+                                        style: const TextStyle(
+                                            color:
+                                                CupertinoColors.inactiveGray),
+                                      ),
+                                    )
+                                  : const SizedBox(),
                               Align(
                                 alignment: message.senderId == userCurrent.uid
                                     ? Alignment.centerRight

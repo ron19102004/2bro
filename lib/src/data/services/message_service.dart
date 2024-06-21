@@ -14,7 +14,6 @@ abstract class MessageService {
   Stream<List<MessageEntity>> getMessagesStream(String receiverId);
 
   void deleteContact(String receiverId);
-
 }
 
 class MessageServiceImpl implements MessageService {
@@ -37,6 +36,7 @@ class MessageServiceImpl implements MessageService {
       UserEntity sender = UserEntity.fromUserAuth(userCurrent);
       messageRepository.saveMessageContact(sender, receiver, content, timeSent);
       final message = MessageEntity(
+          senderName: sender.fullName!,
           content: content,
           senderId: sender.uid,
           receiveId: receiverId,

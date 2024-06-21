@@ -1,5 +1,6 @@
 import 'package:app_chat/src/data/entities/message_entity.dart';
 import 'package:app_chat/src/data/entities/message_group_contact.dart';
+import 'package:app_chat/src/data/entities/user_entity.dart';
 import 'package:app_chat/src/data/repositories/message_group_repo.dart';
 
 abstract class MessageGroupService {
@@ -10,10 +11,14 @@ abstract class MessageGroupService {
   Stream<List<MessageGroupContact>> getMessageGroupsContactStream();
 
   Stream<List<MessageEntity>> getMessageStreamByGroupId(String groupId);
+
   Future<bool> addMember(String groupId, String emailMember);
 
   void removeMember(String groupId, String memberId);
+
   void changeNameGroup(String groupId, String newName);
+
+  Stream<List<UserEntity>> getUserGroupStream(String groupId);
 }
 
 class MessageGroupServiceImpl implements MessageGroupService {
@@ -43,8 +48,8 @@ class MessageGroupServiceImpl implements MessageGroupService {
   }
 
   @override
-  Future<bool> addMember(String groupId, String emailMember) async{
-   return await messageGroupRepository.addMember(groupId, emailMember);
+  Future<bool> addMember(String groupId, String emailMember) async {
+    return await messageGroupRepository.addMember(groupId, emailMember);
   }
 
   @override
@@ -55,5 +60,10 @@ class MessageGroupServiceImpl implements MessageGroupService {
   @override
   void changeNameGroup(String groupId, String newName) {
     messageGroupRepository.changeNameGroup(groupId, newName);
+  }
+
+  @override
+  Stream<List<UserEntity>> getUserGroupStream(String groupId) {
+    return messageGroupRepository.getUserGroupStream(groupId);
   }
 }
