@@ -32,9 +32,8 @@ class _SignInScreenState extends State<SignInScreen> {
               child: Container(
                 width: 300,
                 height: 300,
-                decoration: BoxDecoration(
-                    color: Colors.deepPurpleAccent.shade700,
-                    shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                    color: CupertinoColors.activeGreen, shape: BoxShape.circle),
               ),
             ),
             Align(
@@ -42,9 +41,8 @@ class _SignInScreenState extends State<SignInScreen> {
               child: Container(
                 width: 300,
                 height: 300,
-                decoration: BoxDecoration(
-                    color: Colors.deepPurpleAccent.shade700,
-                    shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                    color: CupertinoColors.activeGreen, shape: BoxShape.circle),
               ),
             ),
             Align(
@@ -52,8 +50,8 @@ class _SignInScreenState extends State<SignInScreen> {
               child: Container(
                 width: 300,
                 height: 300,
-                decoration: BoxDecoration(
-                    color: Colors.cyanAccent.shade700,
+                decoration: const BoxDecoration(
+                    color: CupertinoColors.darkBackgroundGray,
                     shape: BoxShape.rectangle),
               ),
             ),
